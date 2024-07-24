@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Chathub.API/.vs
+/Chathub.API/Chathub.API/obj
+/Chathub.API/Chathub.API/appsettings.json
+/Chathub.API/Chathub.API/appsettings.Development.json
