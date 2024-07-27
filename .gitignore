@@ -7,3 +7,5 @@
 /Chathub.API/Chathub.API/obj
 /Chathub.API/Chathub.API/appsettings.json
 /Chathub.API/Chathub.API/appsettings.Development.json
+/Chathub.API/Chathub.API/bin/Debug/net8.0
+/Chathub.API/Chathub.API/Migrations
