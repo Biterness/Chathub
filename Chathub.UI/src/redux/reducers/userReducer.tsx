@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../store';
+import { postRequest } from '../../httpRequest/httpRequest';
 
 enum LoginState {
     LoggedIn,
@@ -7,7 +8,7 @@ enum LoginState {
     None
 }
 
-export interface UserState {
+export type UserState = {
     token?: string,
     refreshToken?: string,
     userName?: string,
@@ -15,23 +16,23 @@ export interface UserState {
     error?: string
 }
 
-export interface RequestToken {
+export type RequestToken = {
     Token: string,
     RefreshToken: string
 }
 
-export interface LoginInfo {
+export type LoginInfo = {
     UserName: string,
     Password: string
 }
 
-export interface SignupInfo {
+export type SignupInfo = {
     UserName: string,
     Password: string,
     Email: string   
 }
 
-export interface UserInfo {
+export type UserInfo = {
     userName?: string,
     token?: string,
     refreshToken?: string
@@ -42,37 +43,27 @@ const initialState : UserState = getLocalStorage() ?? {
 };
 
 export const Login = createAsyncThunk('user/login', async (data: LoginInfo, { rejectWithValue, fulfillWithValue }) => {
-    const response = await fetch('/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': '*/*'
-        },
-        body: JSON.stringify(data)
-    });
-    
-    if(response.ok === false) {   
-        return rejectWithValue(response.statusText);
+    try {
+        const token = await postRequest<RequestToken>('/login', JSON.stringify(data));
+        return fulfillWithValue(token);
+    } catch(error) {
+        if(error instanceof Error) {
+            return rejectWithValue(error.message);
+        }
+        return rejectWithValue("Unknown error");
     }
-
-    return fulfillWithValue(await response.json());
 });
 
 export const Signup = createAsyncThunk('user/signup', async (data: SignupInfo, { rejectWithValue, fulfillWithValue }) => {
-    const response = await fetch('/signup', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': '*/*'
-        },
-        body: JSON.stringify(data)
-    });
-
-    if(response.ok === false) {
-        return rejectWithValue(response.statusText);
+    try {
+        const token = await postRequest<RequestToken>('/signup', JSON.stringify(data));
+        return fulfillWithValue(token);
+    } catch (error) {
+        if(error instanceof Error) {
+            return rejectWithValue(error.message);
+        }
+        return rejectWithValue("Unknown error");
     }
-
-    return fulfillWithValue(await response.json());
 });
 
 export const userSlice = createSlice({
