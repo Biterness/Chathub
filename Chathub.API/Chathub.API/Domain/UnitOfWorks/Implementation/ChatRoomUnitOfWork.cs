@@ -86,7 +86,7 @@ namespace Chathub.API.Domain.UnitOfWorks.Implementation
         public async Task<List<ChatRoom>> GetAllWithIncludes(Guid userId)
         {
             var roomList = await _chatMemberRepository.GetAsync(member => member.UserId == userId);
-            return await _chatRoomRepository.GetWithAsync(room => roomList.Exists(r => r.ChatRoomId == room.Id), room => room.ChatMessages, room => room.ChatFiles, room => room.ChatMembers);
+            return await _chatRoomRepository.GetWithAsync(room => roomList.Exists(r => r.ChatRoomId == room.Id), room => room.ChatMessages.OrderByDescending(message => message.CreatedAt).Take(50), room => room.ChatFiles, room => room.ChatMembers);
         }
 
         public async Task SaveChangeAsync()
