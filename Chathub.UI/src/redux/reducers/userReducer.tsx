@@ -73,8 +73,8 @@ export const userSlice = createSlice({
         userLoggedOut: (state) => {
             state = initialState;
         },
-        tokenRefreshed: (state, {payload}) => {
-            if(isRequestToken(payload)) {
+        tokenRefreshed: (state, { payload }) => {
+            if('Token' in payload && 'RefreshToken' in payload) {
                 state.token = payload.Token;
                 state.refreshToken = payload.RefreshToken;
             }
@@ -82,13 +82,9 @@ export const userSlice = createSlice({
     },
     extraReducers: builder => {
         builder.addCase(Login.fulfilled, (state, { payload }) => {
-            if(isRequestToken(payload)) {
-                state.token = payload.Token;
-                state.refreshToken = payload.RefreshToken;
-                state.loginState = LoginState.LoggedIn;
-            } else {
-                state.loginState = LoginState.None;
-            }
+            state.token = payload.Token;
+            state.refreshToken = payload.RefreshToken;
+            state.loginState = LoginState.LoggedIn;
         });
         builder.addCase(Login.pending, (state) => {
             state.error = undefined;
@@ -100,13 +96,9 @@ export const userSlice = createSlice({
         });
 
         builder.addCase(Signup.fulfilled, (state, { payload }) => {
-            if(isRequestToken(payload)) {
-                state.token = payload.Token;
-                state.refreshToken = payload.RefreshToken;
-                state.loginState = LoginState.LoggedIn;
-            } else {
-                state.loginState = LoginState.None;
-            }
+            state.token = payload.Token;
+            state.refreshToken = payload.RefreshToken;
+            state.loginState = LoginState.LoggedIn;
         });
         builder.addCase(Signup.pending, (state) => {
             state.error = undefined;
@@ -119,18 +111,16 @@ export const userSlice = createSlice({
     }
 });
 
-function isRequestToken(item: RequestToken | any) {
-    if ('Token' in item && 'RefreshToken' in item)
-        return true
-    return false;
-}
-
 function getLocalStorage(): UserState | undefined {
-    let userInfo = localStorage.getItem('user');
-    if(userInfo !== null) {
-        return (JSON.parse(userInfo)) as UserState;
+    try {
+        let userInfo = localStorage.getItem('user');
+        if(userInfo !== null) {
+            return (JSON.parse(userInfo)) as UserState;
+        }
+        return undefined;
+    } catch (error) {
+        return undefined;
     }
-    return undefined;
 }
 
 export const selectUserInfo = (state: RootState): UserInfo => {
