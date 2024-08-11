@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import { postRequest } from '../../httpRequest/httpRequest';
 
-enum LoginState {
+export enum LoginState {
     LoggedIn,
     Loading,
     None
@@ -35,10 +35,11 @@ export type SignupInfo = {
 export type UserInfo = {
     userName?: string,
     token?: string,
-    refreshToken?: string
+    refreshToken?: string,
+    loginState: LoginState
 }
 
-const initialState : UserState = getLocalStorage() ?? {
+const initialState : UserState = await getLocalStorage() ?? {
     loginState: LoginState.None
 };
 
@@ -71,7 +72,8 @@ export const userSlice = createSlice({
     initialState,
     reducers: {
         userLoggedOut: (state) => {
-            state = initialState;
+            state.loginState = LoginState.None;
+            state = {...initialState}
         },
         tokenRefreshed: (state, { payload }) => {
             if('Token' in payload && 'RefreshToken' in payload) {
@@ -111,9 +113,10 @@ export const userSlice = createSlice({
     }
 });
 
-function getLocalStorage(): UserState | undefined {
+async function getLocalStorage(): Promise<UserState | undefined> {
     try {
         let userInfo = localStorage.getItem('user');
+        
         if(userInfo !== null) {
             return (JSON.parse(userInfo)) as UserState;
         }
@@ -127,7 +130,8 @@ export const selectUserInfo = (state: RootState): UserInfo => {
     return {
         userName: state.users.userName,
         token: state.users.token,
-        refreshToken: state.users.refreshToken
+        refreshToken: state.users.refreshToken,
+        loginState: state.users.loginState
     }
 }
 
