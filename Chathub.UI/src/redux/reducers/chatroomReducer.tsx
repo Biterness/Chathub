@@ -66,7 +66,7 @@ export const addRoom = createAsyncThunk('chatroom/add', async (data: ChatRoomDto
     }
 });
 
-export const fetchRooms = createAsyncThunk('chatroom/fetch', async (data: any | undefined, { rejectWithValue, fulfillWithValue }) => {
+export const fetchRooms = createAsyncThunk('chatroom/fetch', async ({}, { rejectWithValue, fulfillWithValue }) => {
     try {
         let chatRooms = await getRequest<ChatRoom[]>('chatroom');
         return fulfillWithValue(chatRooms);
@@ -82,7 +82,7 @@ export const chatRoomSlice = createSlice({
     name: 'chatroom',
     initialState,
     reducers: {
-        
+            
     },
     extraReducers: builder => {
         builder.addCase(addRoom.fulfilled, (state, { payload }) => {
