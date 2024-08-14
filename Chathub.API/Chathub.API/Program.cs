@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.Extensions.Hosting;
 
 namespace Chathub.API
 {
@@ -26,6 +27,21 @@ namespace Chathub.API
             {
                 options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
             });
+
+            if(builder.Environment.IsDevelopment())
+            {
+                builder.Services.AddCors(options =>
+                {
+                    options.AddDefaultPolicy(policy =>
+                    {
+                        policy.AllowAnyOrigin();
+                        policy.AllowAnyMethod();
+                        policy.AllowAnyHeader();
+                    });
+                });
+
+              
+            }
 
             builder.Services.AddDbContext<ChathubContext>(options =>
             {
@@ -52,6 +68,14 @@ namespace Chathub.API
                     ValidAudience = builder.Configuration["Jwt:Audience"],
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.Unicode.GetBytes(builder.Configuration["Jwt:Key"]))
+                };
+            }).AddCookie(options =>
+            {
+                options.ExpireTimeSpan = TimeSpan.FromDays(15);
+                options.Events.OnRedirectToAccessDenied = context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
                 };
             });
 
@@ -83,7 +107,7 @@ namespace Chathub.API
             // Configure the HTTP request pipeline.
 
             app.UseAuthorization();
-
+            app.UseCors();
 
             app.MapControllers();
 
