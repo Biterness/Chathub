@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Chathub.API.Domain.Services.Implementation
 {
@@ -20,33 +21,33 @@ namespace Chathub.API.Domain.Services.Implementation
             _deviceUnitOfWork = deviceUnitOfWork;
             _config = config;
         }
-        public async Task<string> Login(LoginDto data, HttpRequest req, HttpResponse res)
+        public async Task<string> Login(LoginDto data, HttpContext context)
         {
             var user = await _userUnitOfWork.Login(data);
-            var isNewDevice = await _deviceUnitOfWork.CheckNewDevice(req, user);
+            var isNewDevice = await _deviceUnitOfWork.CheckNewDevice(context.Request, user);
             if (isNewDevice)
             {
-                await _deviceUnitOfWork.AddNewDevice(req, user);
+                await _deviceUnitOfWork.AddNewDevice(context.Request, user);
             }
-
-            return GenerateToken(user, isNewDevice);
+            
+            return GenerateToken(user);
         }
 
-        public async Task<string> Signup(SignupDto data, HttpRequest req, HttpResponse res)
+        public async Task<string> Signup(SignupDto data, HttpContext context)
         {
             var user = await _userUnitOfWork.Signup(data);
-            await _deviceUnitOfWork.AddNewDevice(req, user);
-            return GenerateToken(user, true);
+            await _deviceUnitOfWork.AddNewDevice(context.Request, user);
+            return GenerateToken(user);
         }
-
-        private string GenerateToken(User user, bool isNewDevice)
+        
+        private string GenerateToken(User user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.Unicode.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier,user.Id.ToString()),
-                new Claim(ClaimTypes.Role, isNewDevice ? "NewDevice" : "User")
+                new Claim(ClaimTypes.Role, "User")
             };
             var token = new JwtSecurityToken(_config["Jwt:Issuer"],
                 _config["Jwt:Audience"],

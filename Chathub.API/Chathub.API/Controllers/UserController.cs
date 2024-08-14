@@ -1,10 +1,12 @@
 ﻿using Chathub.API.Domain.Data.Dtos;
 using Chathub.API.Domain.Services.Abstract;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chathub.API.Controllers
 {
+    [AllowAnonymous]
     [Route("/")]
     [ApiController]
     public class UserController : ControllerBase
@@ -14,31 +16,35 @@ namespace Chathub.API.Controllers
         {
             _userService = userService;
         }
-        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto body)
         {
             try
             {
-                return Ok(await _userService.Login(body, Request, Response));
+                return Ok(await _userService.Login(body, HttpContext));
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
         }
-        [AllowAnonymous]
         [HttpPost("signup")]
         public async Task<IActionResult> Signup([FromBody] SignupDto body)
         {
             try
             {
-                return Ok(await _userService.Signup(body, Request, Response));
+                return Ok(await _userService.Signup(body, HttpContext));
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
+        }
+        [Authorize(CookieAuthenticationDefaults.AuthenticationScheme)]
+        [HttpPost("refresh")]
+        public async Task<IActionResult> RefreshToken()
+        {
+            return Ok();
         }
     }
 }
