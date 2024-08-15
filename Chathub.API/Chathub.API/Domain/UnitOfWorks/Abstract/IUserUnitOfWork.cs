@@ -7,5 +7,6 @@ namespace Chathub.API.Domain.UnitOfWorks.Abstract
     {
         Task<User> Login(LoginDto data); 
         Task<User> Signup(SignupDto data);
+        Task<User> Refresh(Guid userId);
     }
 }

@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace Chathub.API.Domain.Services.Implementation
 {
@@ -29,7 +30,8 @@ namespace Chathub.API.Domain.Services.Implementation
             {
                 await _deviceUnitOfWork.AddNewDevice(context.Request, user);
             }
-            
+
+            await GenerateCookie(user, context);
             return GenerateToken(user);
         }
 
@@ -37,9 +39,17 @@ namespace Chathub.API.Domain.Services.Implementation
         {
             var user = await _userUnitOfWork.Signup(data);
             await _deviceUnitOfWork.AddNewDevice(context.Request, user);
+            await GenerateCookie(user, context);
             return GenerateToken(user);
         }
-        
+
+        public async Task<string> RefreshToken(Guid userId, HttpContext context)
+        {
+            var user = await _userUnitOfWork.Refresh(userId);
+            await GenerateCookie(user, context);
+            return GenerateToken(user);
+        }
+
         private string GenerateToken(User user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.Unicode.GetBytes(_config["Jwt:Key"]));
@@ -57,6 +67,23 @@ namespace Chathub.API.Domain.Services.Implementation
 
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        private async Task GenerateCookie(User user, HttpContext context)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            };
+            var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var properties = new AuthenticationProperties
+            {
+                ExpiresUtc = DateTime.Now.AddMinutes(5),
+                IssuedUtc = DateTime.Now,
+                IsPersistent = true
+            };
+
+            await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimIdentity), properties);
         }
     }
 }

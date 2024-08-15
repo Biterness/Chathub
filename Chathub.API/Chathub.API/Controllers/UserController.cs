@@ -3,10 +3,11 @@ using Chathub.API.Domain.Services.Abstract;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Chathub.API.Controllers
 {
-    [AllowAnonymous]
+
     [Route("/")]
     [ApiController]
     public class UserController : ControllerBase
@@ -16,6 +17,7 @@ namespace Chathub.API.Controllers
         {
             _userService = userService;
         }
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto body)
         {
@@ -28,6 +30,7 @@ namespace Chathub.API.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        [AllowAnonymous]
         [HttpPost("signup")]
         public async Task<IActionResult> Signup([FromBody] SignupDto body)
         {
@@ -40,11 +43,19 @@ namespace Chathub.API.Controllers
                 return BadRequest(ex.Message);
             }
         }
-        [Authorize(CookieAuthenticationDefaults.AuthenticationScheme)]
-        [HttpPost("refresh")]
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+        [HttpGet("refresh")]
         public async Task<IActionResult> RefreshToken()
         {
-            return Ok();
+            try
+            {
+                var userId = User.Claims.Where(c => c.Type == ClaimTypes.NameIdentifier).First().Value;
+                return Ok(await _userService.RefreshToken(Guid.Parse(userId), HttpContext));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
