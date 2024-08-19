@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { postRequest, getRequest } from "../../httpRequest/httpRequest";
+import { postRequest, getRequest } from "../../utils/httpRequest/httpRequest";
 
 export type ChatRoomDto = {
     Name: string,

@@ -1,6 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { postRequest } from '../../httpRequest/httpRequest';
+import { postRequest, getRequest } from '../../utils/httpRequest/httpRequest';
+import { getLocalStorage, setLocalStorage } from '../../utils/localStorage/localStorage';
+
+const localStorageKey = import.meta.env.LOCALSTORAGE_KEY;
 
 export enum LoginState {
     LoggedIn,
@@ -10,15 +13,18 @@ export enum LoginState {
 
 export type UserState = {
     token?: string,
-    refreshToken?: string,
     userName?: string,
     loginState: LoginState,
     error?: string
 }
 
-export type RequestToken = {
-    Token: string,
-    RefreshToken: string
+export type UserInfoResult = {
+    Username: string,
+    AccessToken: string
+}
+
+export type AccessToken = {
+    Value: string
 }
 
 export type LoginInfo = {
@@ -35,17 +41,16 @@ export type SignupInfo = {
 export type UserInfo = {
     userName?: string,
     token?: string,
-    refreshToken?: string,
     loginState: LoginState
 }
 
-const initialState : UserState = await getLocalStorage() ?? {
+const initialState : UserState = getLocalStorage<UserState>(localStorageKey) ?? {
     loginState: LoginState.None
 };
 
 export const Login = createAsyncThunk('user/login', async (data: LoginInfo, { rejectWithValue, fulfillWithValue }) => {
     try {
-        const token = await postRequest<RequestToken>('/login', JSON.stringify(data));
+        const token = await postRequest<UserInfoResult>('/login', JSON.stringify(data));
         return fulfillWithValue(token);
     } catch(error) {
         if(error instanceof Error) {
@@ -57,7 +62,7 @@ export const Login = createAsyncThunk('user/login', async (data: LoginInfo, { re
 
 export const Signup = createAsyncThunk('user/signup', async (data: SignupInfo, { rejectWithValue, fulfillWithValue }) => {
     try {
-        const token = await postRequest<RequestToken>('/signup', JSON.stringify(data));
+        const token = await postRequest<UserInfoResult>('/signup', JSON.stringify(data));
         return fulfillWithValue(token);
     } catch (error) {
         if(error instanceof Error) {
@@ -76,17 +81,17 @@ export const userSlice = createSlice({
             state = {...initialState}
         },
         tokenRefreshed: (state, { payload }) => {
-            if('Token' in payload && 'RefreshToken' in payload) {
-                state.token = payload.Token;
-                state.refreshToken = payload.RefreshToken;
+            if('Value' in payload) {
+                state.token = payload.Value;
             }
         }
     },
     extraReducers: builder => {
         builder.addCase(Login.fulfilled, (state, { payload }) => {
-            state.token = payload.Token;
-            state.refreshToken = payload.RefreshToken;
+            state.token = payload.AccessToken;
+            state.userName = payload.Username;
             state.loginState = LoginState.LoggedIn;
+            setLocalStorage(state);
         });
         builder.addCase(Login.pending, (state) => {
             state.error = undefined;
@@ -98,9 +103,10 @@ export const userSlice = createSlice({
         });
 
         builder.addCase(Signup.fulfilled, (state, { payload }) => {
-            state.token = payload.Token;
-            state.refreshToken = payload.RefreshToken;
+            state.token = payload.AccessToken;
+            state.userName = payload.Username;
             state.loginState = LoginState.LoggedIn;
+            setLocalStorage(state);
         });
         builder.addCase(Signup.pending, (state) => {
             state.error = undefined;
@@ -113,27 +119,11 @@ export const userSlice = createSlice({
     }
 });
 
-async function getLocalStorage(): Promise<UserState | undefined> {
-    try {
-        let userInfo = localStorage.getItem('user');
-        
-        if(userInfo !== null) {
-            return (JSON.parse(userInfo)) as UserState;
-        }
-        return undefined;
-    } catch (error) {
-        return undefined;
-    }
+export const selectUserInfo = (state: RootState): UserState => {
+    return state.users;
 }
 
-export const selectUserInfo = (state: RootState): UserInfo => {
-    return {
-        userName: state.users.userName,
-        token: state.users.token,
-        refreshToken: state.users.refreshToken,
-        loginState: state.users.loginState
-    }
-}
+export const getLocalStorageUser = () => getLocalStorage<UserState>(localStorageKey);
 
 export const { tokenRefreshed, userLoggedOut } = userSlice.actions;
 
