@@ -1,6 +1,6 @@
 import HttpStatusCode from "./httpStatusCode";
-import { useAppSelector, useAppDispatch } from "../redux/hook";
-import { selectUserInfo, RequestToken, tokenRefreshed } from "../redux/reducers/userReducer";
+import { getLocalStorageUser, tokenRefreshed, AccessToken } from "../../redux/reducers/userReducer";
+import { useAppDispatch } from "../../redux/hook";
 
 enum RequestMethod {
     GET,
@@ -11,26 +11,25 @@ enum RequestMethod {
 
 type HeaderConfig = {
     'Content-Type': string,
-    'Accept' : string,
+    'Accept': string,
     'Authorization': string
 } | {
     'Content-Type': string,
-    'Accept' : string
+    'Accept': string
+} | {
+    'Accept': string,
+    'Authorization': string,
+} | {
+    'Accept': string
 }
 
 async function request<T>(method: RequestMethod, url: string, body?: BodyInit): Promise<T> {
-    let userInfo = useAppSelector(selectUserInfo);
-    let headers: HeaderConfig = userInfo.token != null ? {
-        'Content-Type': 'application/json',
-        'Accept': '*/*',
-        'Authorization': `Bearer ${userInfo.token}`
-    } : {
-        'Content-Type': 'application/json',
-        'Accept': '*/*'
-    }
+    url = import.meta.env.VITE_SERVER_URL + url
+    let userInfo = getLocalStorageUser();
+    let headers = headerConfigBuilder(method, userInfo?.token);
 
     let response = await fetch(url, {
-        method: Object.keys(RequestMethod)[method],
+        method: RequestMethod[method],
         headers,
         body
     })
@@ -52,33 +51,50 @@ async function request<T>(method: RequestMethod, url: string, body?: BodyInit): 
     return (await response.json()) as T;
 }
 
-async function requestToken(): Promise<RequestToken> {
-    let userInfo = useAppSelector(selectUserInfo);
-    if(userInfo.token == null || userInfo.refreshToken == null) {
-        throw new Error("Authorization not found");
+function headerConfigBuilder(method: RequestMethod, jwtToken?: string): HeaderConfig {
+    return {
+        ...getContentTypeHeader(method),
+        ...getAuthorizationHeader(jwtToken),
+        'Accept': '*/*'
     }
+}
 
-    let tokenInfo: RequestToken = {
-        Token: userInfo.token,
-        RefreshToken: userInfo.refreshToken,
+function getContentTypeHeader(method: RequestMethod): {[key: string]: string} | {} {
+    const contentTypes: {
+        [key: string]: object
+    } = {
+        'GET': {},
+        'POST': {'Content-Type': 'application/json'},
+        'PUT': {'Content-Type': 'application/json'},
+        'DELETE': {}
     }
+    return contentTypes[RequestMethod[method]]
+}
 
-    let headerConfig = {
-        'Content-Type': 'application/json',
+function getAuthorizationHeader(token?: string): {[key: string]: string} | {} {
+    if(token == null) 
+        return {};
+    return {
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+async function requestToken(): Promise<AccessToken> {
+    const headerConfig = {
         'Accept': '*/*'
     }
 
     const response = await fetch('refresh', {
         method: 'GET',
         headers: headerConfig,
-        body: JSON.stringify(tokenInfo)
+        credentials: 'include',
     })
 
     if(response.ok === false) {
         throw new Error(response.statusText);
     }
 
-    return (await response.json()) as RequestToken;
+    return (await response.json()) as AccessToken;
 }
 
 export async function getRequest<T>(url: string): Promise<T> {
