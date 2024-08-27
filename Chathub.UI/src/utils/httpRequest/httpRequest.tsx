@@ -43,10 +43,10 @@ async function request<T>(method: RequestMethod, url: string, body?: BodyInit): 
                 dispatch(tokenRefreshed(newTokenInfo));
                 return await request<T>(method, url, body);
             } catch (err) {
-                throw new Error(response.statusText);
+                throw new Error(await response.text());
             }
         }
-        throw new Error(response.statusText);
+        throw new Error(await response.text());
     } 
     return (await response.json()) as T;
 }
@@ -80,9 +80,7 @@ function getAuthorizationHeader(token?: string): {[key: string]: string} | {} {
 }
 
 async function requestToken(): Promise<AccessToken> {
-    const headerConfig = {
-        'Accept': '*/*'
-    }
+    const headerConfig = headerConfigBuilder(RequestMethod.GET);
 
     const response = await fetch('refresh', {
         method: 'GET',
@@ -90,8 +88,8 @@ async function requestToken(): Promise<AccessToken> {
         credentials: 'include',
     })
 
-    if(response.ok === false) {
-        throw new Error(response.statusText);
+    if(response.status !== HttpStatusCode.OK) {
+        throw new Error(await response.text());
     }
 
     return (await response.json()) as AccessToken;
