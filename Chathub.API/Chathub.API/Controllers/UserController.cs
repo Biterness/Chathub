@@ -1,4 +1,5 @@
 ﻿using Chathub.API.Domain.Data.Dtos;
+using Chathub.API.Domain.Data.Models;
 using Chathub.API.Domain.Services.Abstract;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;

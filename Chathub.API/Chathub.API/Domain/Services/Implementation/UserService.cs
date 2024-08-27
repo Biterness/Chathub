@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Chathub.API.Domain.Data.Models;
 
 namespace Chathub.API.Domain.Services.Implementation
 {
@@ -22,7 +23,7 @@ namespace Chathub.API.Domain.Services.Implementation
             _deviceUnitOfWork = deviceUnitOfWork;
             _config = config;
         }
-        public async Task<string> Login(LoginDto data, HttpContext context)
+        public async Task<UserInfo> Login(LoginDto data, HttpContext context)
         {
             var user = await _userUnitOfWork.Login(data);
             var isNewDevice = await _deviceUnitOfWork.CheckNewDevice(context.Request, user);
@@ -32,22 +33,30 @@ namespace Chathub.API.Domain.Services.Implementation
             }
 
             await GenerateCookie(user, context);
-            return GenerateToken(user);
+            return new UserInfo
+            {
+                Username = user.UserName!,
+                AccessToken = GenerateToken(user)
+            };
         }
 
-        public async Task<string> Signup(SignupDto data, HttpContext context)
+        public async Task<UserInfo> Signup(SignupDto data, HttpContext context)
         {
             var user = await _userUnitOfWork.Signup(data);
             await _deviceUnitOfWork.AddNewDevice(context.Request, user);
             await GenerateCookie(user, context);
-            return GenerateToken(user);
+            return new UserInfo
+            {
+                Username = user.UserName!,
+                AccessToken = GenerateToken(user)
+            };
         }
 
-        public async Task<string> RefreshToken(Guid userId, HttpContext context)
+        public async Task<AccessToken> RefreshToken(Guid userId, HttpContext context)
         {
             var user = await _userUnitOfWork.Refresh(userId);
             await GenerateCookie(user, context);
-            return GenerateToken(user);
+            return new AccessToken(GenerateToken(user));
         }
 
         private string GenerateToken(User user)

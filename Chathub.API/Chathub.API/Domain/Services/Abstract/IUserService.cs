@@ -1,11 +1,12 @@
 ﻿using Chathub.API.Domain.Data.Dtos;
+using Chathub.API.Domain.Data.Models;
 
 namespace Chathub.API.Domain.Services.Abstract
 {
     public interface IUserService
     {
-        Task<string> Login(LoginDto data, HttpContext context);
-        Task<string> Signup(SignupDto data, HttpContext context);
-        Task<string> RefreshToken(Guid userId, HttpContext context);
+        Task<UserInfo> Login(LoginDto data, HttpContext context);
+        Task<UserInfo> Signup(SignupDto data, HttpContext context);
+        Task<AccessToken> RefreshToken(Guid userId, HttpContext context);
     }
 }
