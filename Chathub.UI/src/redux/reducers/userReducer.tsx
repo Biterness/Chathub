@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { postRequest, getRequest } from '../../utils/httpRequest/httpRequest';
+import { postRequest } from '../../utils/httpRequest/httpRequest';
 import { getLocalStorage, setLocalStorage } from '../../utils/localStorage/localStorage';
 
 const localStorageKey = import.meta.env.LOCALSTORAGE_KEY;
@@ -19,12 +19,12 @@ export type UserState = {
 }
 
 export type UserInfoResult = {
-    Username: string,
-    AccessToken: string
+    username: string,
+    accessToken: string
 }
 
-export type AccessToken = {
-    Value: string
+export class AccessToken {
+    value: string = ""
 }
 
 export type LoginInfo = {
@@ -44,7 +44,7 @@ export type UserInfo = {
     loginState: LoginState
 }
 
-const initialState : UserState = getLocalStorage<UserState>(localStorageKey) ?? {
+const initialState : UserState = {
     loginState: LoginState.None
 };
 
@@ -74,24 +74,27 @@ export const Signup = createAsyncThunk('user/signup', async (data: SignupInfo, {
 
 export const userSlice = createSlice({
     name: "user",
-    initialState,
+    initialState: getLocalStorage<UserState>(localStorageKey) ?? initialState,
     reducers: {
-        userLoggedOut: (state) => {
-            state.loginState = LoginState.None;
-            state = {...initialState}
+        loggedOut: () => {
+            setLocalStorage(localStorageKey, initialState);
+            return initialState;
         },
         tokenRefreshed: (state, { payload }) => {
-            if('Value' in payload) {
-                state.token = payload.Value;
+            if(payload instanceof AccessToken) {
+                state.token = payload.value;
+                setLocalStorage(localStorageKey, state)
             }
         }
     },
     extraReducers: builder => {
         builder.addCase(Login.fulfilled, (state, { payload }) => {
-            state.token = payload.AccessToken;
-            state.userName = payload.Username;
+            console.log(JSON.stringify(payload))
+            state.token = payload.accessToken;
+            state.userName = payload.username;
             state.loginState = LoginState.LoggedIn;
-            setLocalStorage(state);
+            state.error = undefined;
+            setLocalStorage(localStorageKey, state);
         });
         builder.addCase(Login.pending, (state) => {
             state.error = undefined;
@@ -103,10 +106,11 @@ export const userSlice = createSlice({
         });
 
         builder.addCase(Signup.fulfilled, (state, { payload }) => {
-            state.token = payload.AccessToken;
-            state.userName = payload.Username;
+            state.token = payload.accessToken;
+            state.userName = payload.username;
             state.loginState = LoginState.LoggedIn;
-            setLocalStorage(state);
+            state.error = undefined;
+            setLocalStorage(localStorageKey, state);
         });
         builder.addCase(Signup.pending, (state) => {
             state.error = undefined;
@@ -125,6 +129,6 @@ export const selectUserInfo = (state: RootState): UserState => {
 
 export const getLocalStorageUser = () => getLocalStorage<UserState>(localStorageKey);
 
-export const { tokenRefreshed, userLoggedOut } = userSlice.actions;
+export const { tokenRefreshed, loggedOut } = userSlice.actions;
 
 export default userSlice.reducer;

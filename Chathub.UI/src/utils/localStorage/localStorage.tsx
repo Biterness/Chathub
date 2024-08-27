@@ -10,8 +10,8 @@ export function getLocalStorage<T>(key: string): T | undefined {
     }
 }
 
-export function setLocalStorage(data: object): void {
-    if(data != null) {
-        localStorage.setItem(import.meta.env.LOCALSTORAGE_KEY, JSON.stringify(data));
+export function setLocalStorage(key: string, data: object): void {
+    if (data != null) {
+        localStorage.setItem(key, JSON.stringify(data));
     }
 } 
