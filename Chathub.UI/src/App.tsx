@@ -8,7 +8,7 @@ import SignupPage from './pages/Signup';
 function App() {
   const { loginState } = useAppSelector(selectUserInfo);
   const CheckUserInfoMissing = (RenderPage: React.ComponentType) => loginState === LoginState.LoggedIn ? <RenderPage /> : <Navigate to="/login" />
-  const CheckUserInfoExists = (RenderPage: React.ComponentType) => loginState !== LoginState.LoggedIn ? <RenderPage /> : <Navigate to="/" />
+  const CheckUserInfoExists = (RenderPage: React.ComponentType) => loginState === LoginState.None || loginState === LoginState.Loading ? <RenderPage /> : <Navigate to="/" />
   return (
     <BrowserRouter>
       <Routes>

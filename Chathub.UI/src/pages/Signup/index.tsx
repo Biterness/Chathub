@@ -1,7 +1,7 @@
 import { useState } from "react";
 import CenterLayout from "../../layouts/Center";
 import { useAppSelector, useAppDispatch } from "../../redux/hook";
-import { selectUserInfo, LoginState, Signup } from "../../redux/reducers/userReducer";
+import { selectUserInfo, LoginState, SignupThunk } from "../../redux/reducers/userReducer";
 import { Eye, EyeSlash, ArrowRepeat, CheckLg } from "react-bootstrap-icons";
 
 const emptyString = "";
@@ -50,7 +50,7 @@ function SignupPage({}) {
             return;
         }
 
-        dispatch(Signup({
+        dispatch(SignupThunk({
             Email: email,
             UserName: userName,
             Password: password

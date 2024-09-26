@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { postRequest, getRequest } from "../../utils/httpRequest/httpRequest";
+import { RootState } from "../store";
+import ChatRoom from "../../models/ChatRoom";
 
 export type ChatRoomDto = {
     Name: string,
@@ -7,68 +9,33 @@ export type ChatRoomDto = {
     MemberList: string[]
 }
 
-export type ChatMember = {
-    Id: string,
-    Name: string
-}
-
-export type ChatMessage = {
-    Id: string,
-    Content: string,
-    UserId: string,
-    CreatedAt: Date,
-    UpdatedAt: Date,
-    DeletedAt: Date
-}
-
-export type ChatFile = {
-    Id: string,
-    Name: string,
-    UserId: string,
-    CreatedAt: Date,
-    UpdatedAt: Date,
-    DeletedAt: Date
-}
-
-export type ChatRoom = {
-    Id: string,
-    Name: string,
-    Description: string,
-    CanShareFile: boolean,
-    CanManageFile: boolean,
-    CanManageMember: boolean,
-    CanGrantRight: boolean,
-    MemberList: ChatMember[],
-    MessageList: ChatMessage[],
-    FileList: ChatFile[]
-}
-
 export type ChatRoomState = {
     isInit: boolean,
-    chatroom: ChatRoom[]
+    chatroom: ChatRoom[],
+    selectedRoom: ChatRoom | undefined
 }
 
 const initialState: ChatRoomState = {
     isInit: false,
-    chatroom: []
+    chatroom: [],
+    selectedRoom: undefined
 }
 
-export const addRoom = createAsyncThunk('chatroom/add', async (data: ChatRoomDto, { rejectWithValue, fulfillWithValue }) => {
+export const addRoom = createAsyncThunk('chatroom/add', async (data: ChatRoomDto, { rejectWithValue, fulfillWithValue, dispatch }) => {
     try {
-        let newRoom = await postRequest<ChatRoom>('room', JSON.stringify(data));
+        let newRoom = await postRequest<ChatRoom>('room', dispatch, data);
         return fulfillWithValue(newRoom);
     } catch (error) {
         if(error instanceof Error) {
             return rejectWithValue(error.message);
         }
-
         return rejectWithValue("Unknown error");
     }
 });
 
-export const fetchRooms = createAsyncThunk('chatroom/fetch', async ({}, { rejectWithValue, fulfillWithValue }) => {
+export const fetchRooms = createAsyncThunk('chatroom/fetch', async (_: null, { rejectWithValue, fulfillWithValue, dispatch }) => {
     try {
-        let chatRooms = await getRequest<ChatRoom[]>('chatroom');
+        let chatRooms = await getRequest<ChatRoom[]>('chatroom', dispatch);
         return fulfillWithValue(chatRooms);
     } catch (error) {
         if(error instanceof Error) {
@@ -82,18 +49,41 @@ export const chatRoomSlice = createSlice({
     name: 'chatroom',
     initialState,
     reducers: {
-            
+        roomSelected: (state, { payload }) => {
+            if(isChatRoomType(payload)) {
+                return {
+                    ...state,
+                    selectedRoom: payload
+                }
+            } 
+        }
     },
     extraReducers: builder => {
         builder.addCase(addRoom.fulfilled, (state, { payload }) => {
             state.chatroom.push(payload);
         });
 
-        builder.addCase(fetchRooms.fulfilled, (state, { payload }) => {
-            state.chatroom = payload;
-            state.isInit = true;
+        builder.addCase(fetchRooms.fulfilled, ({}, { payload }) => {
+            return {
+                chatroom: [...payload],
+                isInit: true,
+                selectedRoom: undefined
+            }
+        })
+        builder.addCase(fetchRooms.rejected, ({}) => {
+            
         })
     }
 });
+
+function isChatRoomType(x: any): boolean {
+    return "id" in x && "memberList" in x && "messageList" in x && "fileList" in x;
+}
+
+export const selectRoomState = (state: RootState): ChatRoomState => {
+    return state.chatrooms
+}
+
+export const { roomSelected } = chatRoomSlice.actions;
 
 export default chatRoomSlice.reducer;

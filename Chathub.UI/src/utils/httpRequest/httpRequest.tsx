@@ -1,112 +1,78 @@
+import axios from "axios";
+import { loggedOut } from "../../redux/reducers/userReducer";
+import { Dispatch } from "@reduxjs/toolkit";
 import HttpStatusCode from "./httpStatusCode";
-import { getLocalStorageUser, tokenRefreshed, AccessToken } from "../../redux/reducers/userReducer";
-import { useAppDispatch } from "../../redux/hook";
+import { addAccessTokenIntercept, setLocalUser, getLocalUser, removeLocalUser } from "../../services/userService";
 
-enum RequestMethod {
-    GET,
-    POST,
-    DELETE,
-    PUT
+type RequestMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
+
+type AccessToken = {
+    value: string;
 }
 
-type HeaderConfig = {
-    'Content-Type': string,
-    'Accept': string,
-    'Authorization': string
-} | {
-    'Content-Type': string,
-    'Accept': string
-} | {
-    'Accept': string,
-    'Authorization': string,
-} | {
-    'Accept': string
-}
+const customFetch = axios.create({
+    baseURL: import.meta.env.VITE_SERVER_URL,
+    withCredentials: true
+})
 
-async function request<T>(method: RequestMethod, url: string, body?: BodyInit): Promise<T> {
-    url = import.meta.env.VITE_SERVER_URL + url
-    let userInfo = getLocalStorageUser();
-    let headers = headerConfigBuilder(method, userInfo?.token);
+customFetch.interceptors.request.use(addAccessTokenIntercept);
 
-    let response = await fetch(url, {
-        method: RequestMethod[method],
-        headers,
-        body
-    })
+async function request<T>(method: RequestMethod, url: string, dispatch: Dispatch, payload?: object): Promise<T> {
+    try {
+        const response = await customFetch<T>({
+            method,
+            url,
+            data: {
+                ...payload
+            }
+        })
+        return response.data as T;
+    } catch (error) {
+        if(axios.isAxiosError(error)) {
+            if(error.status === HttpStatusCode.UNAUTHORIZED) {
+                try {
+                    const token = await refreshToken();
+                    const userLocalStorage = getLocalUser();
+                    if(userLocalStorage != null) {
+                        setLocalUser({
+                            ...userLocalStorage,
+                            accessToken: token.value
+                        });
 
-    if(response.ok === false) {
-        if(response.status === HttpStatusCode.UNAUTHORIZED) {
-            try {
-                let newTokenInfo = await requestToken();
-                let dispatch = useAppDispatch();
-
-                dispatch(tokenRefreshed(newTokenInfo));
-                return await request<T>(method, url, body);
-            } catch (err) {
-                throw new Error(await response.text());
+                        return await request<T>(method, url, dispatch, payload);
+                    } 
+                } catch (err) {
+                    removeLocalUser();
+                    dispatch(loggedOut())
+                    throw err;
+                }
             }
         }
-        throw new Error(await response.text());
-    } 
-    return (await response.json()) as T;
-}
-
-function headerConfigBuilder(method: RequestMethod, jwtToken?: string): HeaderConfig {
-    return {
-        ...getContentTypeHeader(method),
-        ...getAuthorizationHeader(jwtToken),
-        'Accept': '*/*'
+        throw error;
     }
 }
 
-function getContentTypeHeader(method: RequestMethod): {[key: string]: string} | {} {
-    const contentTypes: {
-        [key: string]: object
-    } = {
-        'GET': {},
-        'POST': {'Content-Type': 'application/json'},
-        'PUT': {'Content-Type': 'application/json'},
-        'DELETE': {}
-    }
-    return contentTypes[RequestMethod[method]]
-}
-
-function getAuthorizationHeader(token?: string): {[key: string]: string} | {} {
-    if(token == null) 
-        return {};
-    return {
-        'Authorization': `Bearer ${token}`
-    };
-}
-
-async function requestToken(): Promise<AccessToken> {
-    const headerConfig = headerConfigBuilder(RequestMethod.GET);
-
-    const response = await fetch('refresh', {
+async function refreshToken(): Promise<AccessToken> {
+    const response = await customFetch<AccessToken>({
         method: 'GET',
-        headers: headerConfig,
-        credentials: 'include',
+        url: 'refresh'
     })
 
-    if(response.status !== HttpStatusCode.OK) {
-        throw new Error(await response.text());
-    }
-
-    return (await response.json()) as AccessToken;
+    return response.data as AccessToken;
 }
 
-export async function getRequest<T>(url: string): Promise<T> {
-    return await request<T>(RequestMethod.GET, url);
+export async function getRequest<T>(url: string, dispatch: Dispatch): Promise<T> {
+    return await request<T>('GET', url, dispatch);
 }
 
-export async function postRequest<T>(url: string, body?: BodyInit): Promise<T> {
-    return await request<T>(RequestMethod.POST, url, body);
+export async function postRequest<T>(url: string, dispatch: Dispatch, body?: object): Promise<T> {
+    return await request<T>('POST', url, dispatch, body);
 }
 
-export async function putRequest<T>(url: string, body?: BodyInit): Promise<T> {
-    return await request<T>(RequestMethod.PUT, url, body);
+export async function putRequest<T>(url: string, dispatch: Dispatch, body?: object): Promise<T> {
+    return await request<T>('PUT', url, dispatch, body);
 }
 
-export async function deleteRequest<T>(url: string, body?: BodyInit): Promise<T> {
-    return await request<T>(RequestMethod.DELETE, url, body);
+export async function deleteRequest<T>(url: string, dispatch: Dispatch, body?: object): Promise<T> {
+    return await request<T>('DELETE', url, dispatch, body);
 }

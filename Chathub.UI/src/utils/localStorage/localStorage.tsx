@@ -15,3 +15,7 @@ export function setLocalStorage(key: string, data: object): void {
         localStorage.setItem(key, JSON.stringify(data));
     }
 } 
+
+export function removeLocalStorage(key: string): void {
+    localStorage.removeItem(key);
+}

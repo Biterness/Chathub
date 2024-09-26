@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
-import { Login, selectUserInfo, LoginState } from "../../redux/reducers/userReducer";
+import { LoginThunk, selectUserInfo, LoginState } from "../../redux/reducers/userReducer";
 import { Eye, EyeSlash, ArrowRepeat, CheckLg } from "react-bootstrap-icons";
 import CenterLayout from "../../layouts/Center";
 
@@ -36,8 +36,8 @@ function LoginPage({}) {
             return;
         }
 
-        dispatch(Login({
-            UserName: userName,
+        dispatch(LoginThunk({
+            Username: userName,
             Password: password
         }))
     }

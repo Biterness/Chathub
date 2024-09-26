@@ -1,9 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { postRequest } from '../../utils/httpRequest/httpRequest';
-import { getLocalStorage, setLocalStorage } from '../../utils/localStorage/localStorage';
-
-const localStorageKey = import.meta.env.LOCALSTORAGE_KEY;
+import { login, signup, isLocalUserExist, getLocalUser } from '../../services/userService';
 
 export enum LoginState {
     LoggedIn,
@@ -12,23 +9,17 @@ export enum LoginState {
 }
 
 export type UserState = {
-    token?: string,
     userName?: string,
     loginState: LoginState,
     error?: string
 }
 
 export type UserInfoResult = {
-    username: string,
-    accessToken: string
-}
-
-export class AccessToken {
-    value: string = ""
+    username: string
 }
 
 export type LoginInfo = {
-    UserName: string,
+    Username: string,
     Password: string
 }
 
@@ -38,19 +29,13 @@ export type SignupInfo = {
     Email: string   
 }
 
-export type UserInfo = {
-    userName?: string,
-    token?: string,
-    loginState: LoginState
-}
-
 const initialState : UserState = {
     loginState: LoginState.None
 };
 
-export const Login = createAsyncThunk('user/login', async (data: LoginInfo, { rejectWithValue, fulfillWithValue }) => {
+export const LoginThunk = createAsyncThunk('user/login', async (data: LoginInfo, { rejectWithValue, fulfillWithValue, dispatch }) => {
     try {
-        const token = await postRequest<UserInfoResult>('/login', JSON.stringify(data));
+        const token = await login(data, dispatch);
         return fulfillWithValue(token);
     } catch(error) {
         if(error instanceof Error) {
@@ -60,9 +45,9 @@ export const Login = createAsyncThunk('user/login', async (data: LoginInfo, { re
     }
 });
 
-export const Signup = createAsyncThunk('user/signup', async (data: SignupInfo, { rejectWithValue, fulfillWithValue }) => {
+export const SignupThunk = createAsyncThunk('user/signup', async (data: SignupInfo, { rejectWithValue, fulfillWithValue, dispatch }) => {
     try {
-        const token = await postRequest<UserInfoResult>('/signup', JSON.stringify(data));
+        const token = await signup(data, dispatch);
         return fulfillWithValue(token);
     } catch (error) {
         if(error instanceof Error) {
@@ -74,49 +59,40 @@ export const Signup = createAsyncThunk('user/signup', async (data: SignupInfo, {
 
 export const userSlice = createSlice({
     name: "user",
-    initialState: getLocalStorage<UserState>(localStorageKey) ?? initialState,
+    initialState: isLocalUserExist() ? {
+        ...getLocalUser(),
+        loginState: LoginState.LoggedIn
+    } : initialState,
     reducers: {
         loggedOut: () => {
-            setLocalStorage(localStorageKey, initialState);
             return initialState;
-        },
-        tokenRefreshed: (state, { payload }) => {
-            if(payload instanceof AccessToken) {
-                state.token = payload.value;
-                setLocalStorage(localStorageKey, state)
-            }
         }
     },
     extraReducers: builder => {
-        builder.addCase(Login.fulfilled, (state, { payload }) => {
-            console.log(JSON.stringify(payload))
-            state.token = payload.accessToken;
+        builder.addCase(LoginThunk.fulfilled, (state, { payload }) => {
             state.userName = payload.username;
             state.loginState = LoginState.LoggedIn;
             state.error = undefined;
-            setLocalStorage(localStorageKey, state);
         });
-        builder.addCase(Login.pending, (state) => {
+        builder.addCase(LoginThunk.pending, (state) => {
             state.error = undefined;
             state.loginState = LoginState.Loading;
         });
-        builder.addCase(Login.rejected, (state, { payload }) => {
+        builder.addCase(LoginThunk.rejected, (state, { payload }) => {
             state.error = typeof payload === 'string' ? payload : undefined;
             state.loginState = LoginState.None;
         });
 
-        builder.addCase(Signup.fulfilled, (state, { payload }) => {
-            state.token = payload.accessToken;
+        builder.addCase(SignupThunk.fulfilled, (state, { payload }) => {
             state.userName = payload.username;
             state.loginState = LoginState.LoggedIn;
             state.error = undefined;
-            setLocalStorage(localStorageKey, state);
         });
-        builder.addCase(Signup.pending, (state) => {
+        builder.addCase(SignupThunk.pending, (state) => {
             state.error = undefined;
             state.loginState = LoginState.Loading;
         });
-        builder.addCase(Signup.rejected, (state, { payload }) => {
+        builder.addCase(SignupThunk.rejected, (state, { payload }) => {
             state.error = typeof payload === 'string' ? payload : undefined;
             state.loginState = LoginState.None;
         });
@@ -127,8 +103,6 @@ export const selectUserInfo = (state: RootState): UserState => {
     return state.users;
 }
 
-export const getLocalStorageUser = () => getLocalStorage<UserState>(localStorageKey);
-
-export const { tokenRefreshed, loggedOut } = userSlice.actions;
+export const { loggedOut } = userSlice.actions;
 
 export default userSlice.reducer;
