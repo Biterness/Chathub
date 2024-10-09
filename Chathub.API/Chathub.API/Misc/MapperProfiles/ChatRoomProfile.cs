@@ -34,8 +34,7 @@ namespace Chathub.API.Misc.MapperProfiles
                     .ForMember(dto => dto.CanManageFile, otp => otp.MapFrom(t => t.Item2.CanManageFile))
                     .ForMember(dto => dto.CanManageMember, otp => otp.MapFrom(t => t.Item2.CanManageMember))
                     .ForMember(dto => dto.CanGrantRight, otp => otp.MapFrom(t => t.Item2.CanGrantRight))
-                    .ForMember(dto => dto.FileList, otp => otp.MapFrom(t => t.Item1.ChatFiles))
-                    .ForMember(dto => dto.MessageList, otp => otp.MapFrom(t => t.Item1.ChatMessages))
+                    .ForMember(dto => dto.ContentList, otp => otp.MapFrom(t => t.Item1.ChatContents))
                     .ForMember(dto => dto.MemberList, otp => otp.MapFrom(t => t.Item1.ChatMembers));
         }
     }

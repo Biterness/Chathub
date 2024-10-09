@@ -8,8 +8,7 @@
         public Guid OwnerId { get; set; }
         public User Owner { get; set; }
         public List<ChatMember> ChatMembers { get; set; }
-        public List<ChatMessage> ChatMessages { get; set; }
-        public List<ChatFile> ChatFiles { get; set; }
+        public List<ChatContent> ChatContents { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; }
         public DateTime DeletedAt { get; set; }

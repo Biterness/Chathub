@@ -1,6 +1,10 @@
 ﻿using Chathub.API.Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using ChatFile = Chathub.API.Infrastructure.Data.Entities.ChatFile;
+using ChatMember = Chathub.API.Infrastructure.Data.Entities.ChatMember;
+using ChatMessage = Chathub.API.Infrastructure.Data.Entities.ChatMessage;
+using ChatRoom = Chathub.API.Infrastructure.Data.Entities.ChatRoom;
 
 namespace Chathub.API.Infrastructure.Data.Context
 {
@@ -12,6 +16,7 @@ namespace Chathub.API.Infrastructure.Data.Context
         public DbSet<Device> Devices { get; set; }
         public DbSet<ChatRoom> ChatRooms { get; set; }
         public DbSet<ChatMember> ChatMembers { get; set; }
+        public DbSet<ChatContent> ChatContents { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatFile> ChatFiles { get; set; }
         public ChathubContext(DbContextOptions<ChathubContext> options)
@@ -24,8 +29,7 @@ namespace Chathub.API.Infrastructure.Data.Context
             modelBuilder.Entity<User>().Property(x => x.UserName).IsRequired();
             modelBuilder.Entity<User>().HasMany(x => x.ChatRooms).WithOne(x => x.Owner).HasForeignKey(x => x.OwnerId).IsRequired();
             modelBuilder.Entity<User>().HasMany(x => x.ChatMembers).WithOne(x => x.User).HasForeignKey(x => x.UserId).IsRequired();
-            modelBuilder.Entity<User>().HasMany(x => x.ChatMesssages).WithOne(x => x.User).HasForeignKey(x => x.UserId).IsRequired();
-            modelBuilder.Entity<User>().HasMany(x => x.ChatFiles).WithOne(x => x.User).HasForeignKey(x => x.UserId).IsRequired();
+            modelBuilder.Entity<User>().HasMany(x => x.ChatContents).WithOne(x => x.User).HasForeignKey(x => x.UserId).IsRequired();
             modelBuilder.Entity<User>().HasMany(x => x.Devices).WithOne(x => x.User).HasForeignKey(x => x.UserId).IsRequired();
 
             modelBuilder.Entity<Role>().HasKey(x => x.Id);
@@ -40,8 +44,7 @@ namespace Chathub.API.Infrastructure.Data.Context
             modelBuilder.Entity<ChatRoom>().Property(x => x.Name).IsRequired();
             modelBuilder.Entity<ChatRoom>().Property(x => x.Description).IsRequired();
             modelBuilder.Entity<ChatRoom>().HasMany(x => x.ChatMembers).WithOne(x => x.ChatRoom).HasForeignKey(x => x.ChatRoomId).IsRequired();
-            modelBuilder.Entity<ChatRoom>().HasMany(x => x.ChatMessages).WithOne(x => x.ChatRoom).HasForeignKey(x => x.ChatRoomId).IsRequired();
-            modelBuilder.Entity<ChatRoom>().HasMany(x => x.ChatFiles).WithOne(x => x.ChatRoom).HasForeignKey(x => x.ChatRoomId).IsRequired();
+            modelBuilder.Entity<ChatRoom>().HasMany(x => x.ChatContents).WithOne(x => x.ChatRoom).HasForeignKey(x => x.ChatRoomId).IsRequired();
 
             modelBuilder.Entity<ChatMember>().HasKey(x => x.Id);
             modelBuilder.Entity<ChatMember>().Property(x => x.ChatRoomId).IsRequired();
@@ -49,16 +52,17 @@ namespace Chathub.API.Infrastructure.Data.Context
             modelBuilder.Entity<ChatMember>().Property(x => x.UserName).IsRequired();
             modelBuilder.Entity<ChatMember>().HasIndex(x => new {x.ChatRoomId, x.UserId}).IsUnique();
 
-            modelBuilder.Entity<ChatMessage>().HasKey(x => x.Id);
-            modelBuilder.Entity<ChatMessage>().Property(x => x.Content).IsRequired();
-            modelBuilder.Entity<ChatMessage>().Property(x => x.UserId).IsRequired();
-            modelBuilder.Entity<ChatMessage>().Property(x => x.ChatRoomId).IsRequired();
+            modelBuilder.Entity<ChatContent>().HasKey(x => x.Id);
+            modelBuilder.Entity<ChatContent>().Property(x => x.UserId).IsRequired();
+            modelBuilder.Entity<ChatContent>().Property(x => x.ChatRoomId).IsRequired();
+            modelBuilder.Entity<ChatContent>().ToTable("Contents");
 
-            modelBuilder.Entity<ChatFile>().HasKey(x => x.Id);
+            modelBuilder.Entity<ChatMessage>().Property(x => x.Content).IsRequired();
+            modelBuilder.Entity<ChatMessage>().ToTable("Messages");
+;
             modelBuilder.Entity<ChatFile>().Property(x => x.Name).IsRequired();
             modelBuilder.Entity<ChatFile>().Property(x => x.Location).IsRequired();
-            modelBuilder.Entity<ChatFile>().Property(x => x.UserId).IsRequired();
-            modelBuilder.Entity<ChatFile>().Property(x => x.ChatRoomId).IsRequired();
+            modelBuilder.Entity<ChatFile>().ToTable("Files");
 
             modelBuilder.Entity<Role>().HasData([
                 new Role

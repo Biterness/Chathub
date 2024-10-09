@@ -12,8 +12,7 @@ namespace Chathub.API.Infrastructure.Data.Entities
         public DateTime DeletedAt { get; set; }
         public List<ChatMember> ChatMembers { get; set; }
         public List<ChatRoom> ChatRooms { get; set; }
-        public List<ChatMessage> ChatMesssages { get; set; }
-        public List<ChatFile> ChatFiles { get; set; }
+        public List<ChatContent> ChatContents { get; set; }
         public List<Device> Devices { get; set; }
     }
 }
