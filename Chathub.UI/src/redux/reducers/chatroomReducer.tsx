@@ -77,7 +77,7 @@ export const chatRoomSlice = createSlice({
 });
 
 function isChatRoomType(x: any): boolean {
-    return "id" in x && "memberList" in x && "messageList" in x && "fileList" in x;
+    return "id" in x && "memberList" in x && "contentList" in x;
 }
 
 export const selectRoomState = (state: RootState): ChatRoomState => {

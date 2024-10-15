@@ -1,10 +1,7 @@
-export type ChatMessage = {
-    Id: string,
-    Content: string,
-    UserId: string,
-    CreatedAt: Date,
-    UpdatedAt: Date,
-    DeletedAt: Date
+import ChatContent from "./ChatContent";
+
+export type ChatMessage = ChatContent & {
+    Content: string
 }
 
 export default ChatMessage;

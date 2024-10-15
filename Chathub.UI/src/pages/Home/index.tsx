@@ -26,7 +26,7 @@ function HomePage({}) {
                 <Sidebar />
             </div>
             <div className="border-b-2 flex-1">
-                {selectedRoom != null ? <SelectedChatRoomComponent {...selectedRoom} /> : "Main Content"}
+                {selectedRoom != null ? <SelectedChatRoomComponent {...selectedRoom} /> : <div className="w-full h-full flex text-gray-400 justify-center items-center select-none">Select a room or create a new one to start</div>}
             </div>
         </div>
     )

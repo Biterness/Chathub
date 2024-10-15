@@ -1,10 +1,7 @@
-type ChatFile = {
-    Id: string,
-    Name: string,
-    UserId: string,
-    CreatedAt: Date,
-    UpdatedAt: Date,
-    DeletedAt: Date
+import ChatContent from "./ChatContent";
+
+type ChatFile = ChatContent & {
+    Name: string
 }
 
 export default ChatFile;

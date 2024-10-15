@@ -2,7 +2,7 @@ import { selectRoomState } from "../../redux/reducers/chatroomReducer";
 import { useAppSelector } from "../../redux/hook";
 import { useEffect, useState } from "react";
 import ChatRoomModel from "../../models/ChatRoom";
-import ChatRoomComponent from "../ChatRoom";
+import ChatRoomComponent from "./ChatRoom";
 
 function Sidebar() {
     const [rooms, setRooms] = useState<ChatRoomModel[]>([]);

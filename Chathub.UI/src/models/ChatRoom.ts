@@ -11,8 +11,7 @@ type ChatRoom = {
     canManageMember: boolean,
     canGrantRight: boolean,
     memberList: ChatMember[],
-    messageList: ChatMessage[],
-    fileList: ChatFile[]
+    contentList: (ChatMessage|ChatFile)[]
 }
 
 export default ChatRoom;
