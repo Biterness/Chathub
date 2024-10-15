@@ -1,5 +1,5 @@
 import { useState } from "react";
-import CenterLayout from "../../layouts/Center";
+import CenterLayout from "../../layouts/CenterLayout";
 import { useAppSelector, useAppDispatch } from "../../redux/hook";
 import { selectUserInfo, LoginState, SignupThunk } from "../../redux/reducers/userReducer";
 import { Eye, EyeSlash, ArrowRepeat, CheckLg } from "react-bootstrap-icons";

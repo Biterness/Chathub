@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../redux/hook";
 import { LoginThunk, selectUserInfo, LoginState } from "../../redux/reducers/userReducer";
 import { Eye, EyeSlash, ArrowRepeat, CheckLg } from "react-bootstrap-icons";
-import CenterLayout from "../../layouts/Center";
+import CenterLayout from "../../layouts/CenterLayout";
 
 const emptyString = "";
 
