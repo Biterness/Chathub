@@ -17,6 +17,7 @@ namespace Chathub.API
 {
     public class Program
     {
+        private static readonly string _corsPolicy = "AllowAll";
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -28,20 +29,16 @@ namespace Chathub.API
                 options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
             });
 
-            if(builder.Environment.IsDevelopment())
+            builder.Services.AddCors(options =>
             {
-                builder.Services.AddCors(options =>
+                options.AddPolicy(_corsPolicy, policy =>
                 {
-                    options.AddDefaultPolicy(policy =>
-                    {
-                        policy.AllowAnyOrigin();
-                        policy.AllowAnyMethod();
-                        policy.AllowAnyHeader();
-                    });
+                    policy.AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials()
+                            .SetIsOriginAllowed(hostname => true);
                 });
-
-              
-            }
+            });
 
             builder.Services.AddDbContext<ChathubContext>(options =>
             {
@@ -67,12 +64,17 @@ namespace Chathub.API
                     ValidateLifetime = true,
                     ValidAudience = builder.Configuration["Jwt:Audience"],
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.Unicode.GetBytes(builder.Configuration["Jwt:Key"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.Unicode.GetBytes(builder.Configuration["Jwt:Key"])),
+                    ClockSkew = TimeSpan.Zero
                 };
             }).AddCookie(options =>
             {
-                options.ExpireTimeSpan = TimeSpan.FromDays(15);
-                options.Events.OnRedirectToAccessDenied = context =>
+                options.Cookie.HttpOnly = true;
+                options.ReturnUrlParameter = string.Empty;
+                options.AccessDeniedPath = string.Empty;
+                options.LoginPath = string.Empty;
+                options.Events.OnRedirectToAccessDenied =
+                options.Events.OnRedirectToLogin = context =>
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     return Task.CompletedTask;
@@ -105,9 +107,9 @@ namespace Chathub.API
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
             // Configure the HTTP request pipeline.
-
+            app.UseCors(_corsPolicy);
             app.UseAuthorization();
-            app.UseCors();
+
 
             app.MapControllers();
 
