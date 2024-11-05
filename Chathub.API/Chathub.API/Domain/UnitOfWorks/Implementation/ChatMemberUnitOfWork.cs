@@ -22,6 +22,11 @@ namespace Chathub.API.Domain.UnitOfWorks.Implementation
             return await _chatMemberRepository.GetAsync(member => member.UserId == userId);
         }
 
+        public async Task<ChatMember> GetMemberByRoomIdByUserId(Guid userId, Guid roomId)
+        {
+            return (await _chatMemberRepository.GetAsync(member => member.UserId == userId && member.ChatRoomId == roomId)).FirstOrDefault();
+        }
+
         public async Task SaveChangeAsync()
         {
             await _chatMemberRepository.SaveChangesAsync();

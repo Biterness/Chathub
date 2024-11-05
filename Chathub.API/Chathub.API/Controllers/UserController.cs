@@ -58,5 +58,19 @@ namespace Chathub.API.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        [Authorize]
+        [HttpPost("invite")]
+        public async Task<IActionResult> GetMemberInfo([FromBody] InviteMemberDto data)
+        {
+            try
+            {
+                var memberInfo = await _userService.GetMemberInfo(data);
+                return Ok(memberInfo);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

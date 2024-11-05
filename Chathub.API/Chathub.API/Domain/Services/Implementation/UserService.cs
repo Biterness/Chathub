@@ -9,6 +9,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Chathub.API.Domain.Data.Models;
+using AutoMapper;
 
 namespace Chathub.API.Domain.Services.Implementation
 {
@@ -17,11 +18,13 @@ namespace Chathub.API.Domain.Services.Implementation
         private IUserUnitOfWork _userUnitOfWork;
         private IDeviceUnitOfWork _deviceUnitOfWork;
         private IConfiguration _config;
-        public UserService(IUserUnitOfWork userUnitOfWork, IDeviceUnitOfWork deviceUnitOfWork, IConfiguration config)
+        private IMapper _mapper;
+        public UserService(IUserUnitOfWork userUnitOfWork, IDeviceUnitOfWork deviceUnitOfWork, IConfiguration config, IMapper mapper)
         {
             _userUnitOfWork = userUnitOfWork;
             _deviceUnitOfWork = deviceUnitOfWork;
             _config = config;
+            _mapper = mapper;
         }
         public async Task<UserInfo> Login(LoginDto data, HttpContext context)
         {
@@ -59,6 +62,12 @@ namespace Chathub.API.Domain.Services.Implementation
             return new AccessToken(GenerateToken(user));
         }
 
+        public async Task<Data.Models.ChatMember> GetMemberInfo(InviteMemberDto data)
+        {
+            var member = await _userUnitOfWork.GetUserInfo(data.Email);
+            return _mapper.Map<Data.Models.ChatMember>(member);
+        }   
+
         private string GenerateToken(User user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.Unicode.GetBytes(_config["Jwt:Key"]));
@@ -87,9 +96,10 @@ namespace Chathub.API.Domain.Services.Implementation
 
             var properties = new AuthenticationProperties
             {
-                ExpiresUtc = DateTime.Now.AddMinutes(5),
+                ExpiresUtc = DateTime.Now.AddDays(3),
                 IssuedUtc = DateTime.Now,
-                IsPersistent = true
+                IsPersistent = true,
+                RedirectUri = string.Empty,
             };
 
             await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimIdentity), properties);

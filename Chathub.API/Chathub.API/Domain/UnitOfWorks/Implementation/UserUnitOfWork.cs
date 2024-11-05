@@ -80,6 +80,19 @@ namespace Chathub.API.Domain.UnitOfWorks.Implementation
             await SaveChangeAsync();
             return user.First();
         }
+
+        public async Task<User> GetUserInfo(string email)
+        {
+            var user = await _userRepository.GetAsync(u => u.Email == email);
+            if (user.Count == 0)
+            {
+                throw new Exception("User not found");
+            }
+
+            return user.First();
+        }
+
+
         public async Task SaveChangeAsync()
         {
             await _userRepository.SaveChangesAsync();

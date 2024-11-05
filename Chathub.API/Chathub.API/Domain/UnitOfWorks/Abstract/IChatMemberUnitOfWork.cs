@@ -6,5 +6,6 @@ namespace Chathub.API.Domain.UnitOfWorks.Abstract
     {
         Task<List<ChatMember>> GetAllByUserId(Guid userId);
         Task<List<ChatMember>> GetAllByRoomId(Guid roomId);
+        Task<ChatMember> GetMemberByRoomIdByUserId(Guid userId, Guid roomId);
     }
 }
