@@ -13,7 +13,7 @@ function ChatRoomComponent(props: ChatRoom) {
     }
 
     return (    
-        <div className="w-full px-3 py-2 border-solid border-l-gray-400 border-b-2 rounded-sm hover:cursor-pointer hover:bg-green-200 select-none" onClick={() => onClick()}>
+        <div className="w-full px-3 py-2 border-solid border-b-2 rounded-md hover:cursor-pointer hover:bg-green-200 select-none" onClick={onClick}>
             {name}
         </div>
     )
