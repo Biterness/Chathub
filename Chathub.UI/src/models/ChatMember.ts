@@ -1,6 +1,7 @@
 export type ChatMember = {
-    Id: string,
-    Name: string
+    id: string,
+    name: string,
+    email: string
 }
 
 export default ChatMember;

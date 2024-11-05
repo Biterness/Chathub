@@ -1,7 +1,7 @@
 import ChatContent from "./ChatContent";
 
 type ChatFile = ChatContent & {
-    Name: string
+    name: string
 }
 
 export default ChatFile;

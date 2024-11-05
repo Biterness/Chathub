@@ -1,7 +1,7 @@
 import ChatContent from "./ChatContent";
 
 export type ChatMessage = ChatContent & {
-    Content: string
+    content: string
 }
 
 export default ChatMessage;
