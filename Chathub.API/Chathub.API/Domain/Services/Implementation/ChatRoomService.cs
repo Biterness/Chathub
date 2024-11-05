@@ -4,6 +4,7 @@ using InfrastructureData = Chathub.API.Infrastructure.Data.Entities;
 using Chathub.API.Domain.Services.Abstract;
 using Chathub.API.Domain.UnitOfWorks.Abstract;
 using Chathub.API.Domain.Data.Dtos;
+using Chathub.API.Domain.Data.Models;
 
 namespace Chathub.API.Domain.Services.Implementation
 {
@@ -18,9 +19,21 @@ namespace Chathub.API.Domain.Services.Implementation
             _chatMemberUnitOfWork = chatMemberUnitOfWork;
             _mapper = mapper;
         }
-        public async Task CreateRoom(CreateRoomDto data, Guid userId)
+        public async Task<ChatRoom> CreateRoom(CreateRoomDto data, Guid userId)
         {
-            await _chatRoomUnitOfWork.CreateRoom(data, userId);
+            var newRoom = await _chatRoomUnitOfWork.CreateRoom(data, userId);
+            if (newRoom == null)
+            {
+                throw new Exception("Room not found");
+            }
+
+            var member = await _chatMemberUnitOfWork.GetMemberByRoomIdByUserId(userId, newRoom.Id);
+            if (member == null)
+            {
+                throw new Exception("Member not found");
+            }
+
+            return _mapper.Map<ChatRoom>(new Tuple<Infrastructure.Data.Entities.ChatRoom, Infrastructure.Data.Entities.ChatMember>(newRoom, member));
         }
 
         public async Task DeleteRoom(Guid roomId, Guid userId)

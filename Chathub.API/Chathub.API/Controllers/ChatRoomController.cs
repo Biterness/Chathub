@@ -34,8 +34,7 @@ namespace Chathub.API.Controllers
             try
             {
                 var userId = GetRequestGuid();
-                await _chatRoomService.CreateRoom(body, userId);
-                return Ok();
+                return Ok(await _chatRoomService.CreateRoom(body, userId));
             }
             catch (Exception ex)
             {

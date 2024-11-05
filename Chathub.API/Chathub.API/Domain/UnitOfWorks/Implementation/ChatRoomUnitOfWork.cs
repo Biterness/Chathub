@@ -17,7 +17,7 @@ namespace Chathub.API.Domain.UnitOfWorks.Implementation
             _userRepository = userRepository;
         }
 
-        public async Task CreateRoom(CreateRoomDto data, Guid userId)
+        public async Task<ChatRoom> CreateRoom(CreateRoomDto data, Guid userId)
         {
             var newRoom = new ChatRoom
             {
@@ -63,6 +63,7 @@ namespace Chathub.API.Domain.UnitOfWorks.Implementation
                 await _chatMemberRepository.CreateAsync(newMember);
             }
             await SaveChangeAsync();
+            return newRoom;
         }
 
         public async Task DeleteRoom(ChatRoom room)

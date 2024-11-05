@@ -7,7 +7,7 @@ namespace Chathub.API.Domain.UnitOfWorks.Abstract
     {
         Task<List<ChatRoom>> GetAll(Guid userId);
         Task<List<ChatRoom>> GetAllWithIncludes(Guid userId);
-        Task CreateRoom(CreateRoomDto data, Guid userId);
+        Task<ChatRoom> CreateRoom(CreateRoomDto data, Guid userId);
         Task DeleteRoom(ChatRoom room);
     }
 }
