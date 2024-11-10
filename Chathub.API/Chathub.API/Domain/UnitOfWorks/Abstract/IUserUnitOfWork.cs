@@ -8,6 +8,7 @@ namespace Chathub.API.Domain.UnitOfWorks.Abstract
         Task<User> Login(LoginDto data); 
         Task<User> Signup(SignupDto data);
         Task<User> Refresh(Guid userId);
-        Task<User> GetUserInfo(string email);
+        Task<User> GetUserInfoByEmail(string email);
+        Task<User> GetUserInfoById(Guid userId);
     }
 }

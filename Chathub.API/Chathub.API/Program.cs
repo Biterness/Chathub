@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Hosting;
+using Chathub.API.Domain.Hubs;
 
 namespace Chathub.API
 {
@@ -23,6 +24,8 @@ namespace Chathub.API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+
+            builder.Services.AddSignalR();
 
             builder.Services.AddControllers().AddJsonOptions(options =>
             {
@@ -48,6 +51,7 @@ namespace Chathub.API
             builder.Services.AddIdentityCore<User>(options =>
             {
                 options.Password.RequiredLength = 8;
+                options.User.RequireUniqueEmail = true;
             }).AddEntityFrameworkStores<ChathubContext>();
 
             builder.Services.AddAuthentication(options =>
@@ -66,6 +70,23 @@ namespace Chathub.API
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.Unicode.GetBytes(builder.Configuration["Jwt:Key"])),
                     ClockSkew = TimeSpan.Zero
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            (path.StartsWithSegments("/chat")))
+                        {
+                            context.Token = accessToken;
+
+                        }
+
+                        return Task.CompletedTask;
+                    }
                 };
             }).AddCookie(options =>
             {
@@ -112,6 +133,7 @@ namespace Chathub.API
 
 
             app.MapControllers();
+            app.MapHub<ChatHub>("/chat");
 
             app.Run();
         }

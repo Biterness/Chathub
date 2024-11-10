@@ -64,9 +64,15 @@ namespace Chathub.API.Domain.Services.Implementation
 
         public async Task<Data.Models.ChatMember> GetMemberInfo(InviteMemberDto data)
         {
-            var member = await _userUnitOfWork.GetUserInfo(data.Email);
+            var member = await _userUnitOfWork.GetUserInfoByEmail(data.Email);
             return _mapper.Map<Data.Models.ChatMember>(member);
-        }   
+        }
+
+        public async Task<Data.Models.ChatMember> GetSenderInfo(Guid userId)
+        {
+            var user = await _userUnitOfWork.GetUserInfoById(userId);
+            return _mapper.Map<Data.Models.ChatMember>(user);
+        }
 
         private string GenerateToken(User user)
         {

@@ -9,5 +9,6 @@ namespace Chathub.API.Domain.Services.Abstract
         Task<UserInfo> Signup(SignupDto data, HttpContext context);
         Task<AccessToken> RefreshToken(Guid userId, HttpContext context);
         Task<ChatMember> GetMemberInfo(InviteMemberDto data);
+        Task<ChatMember> GetSenderInfo(Guid userId);
     }
 }

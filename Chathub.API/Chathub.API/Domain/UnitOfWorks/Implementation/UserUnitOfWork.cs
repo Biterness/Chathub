@@ -81,7 +81,7 @@ namespace Chathub.API.Domain.UnitOfWorks.Implementation
             return user.First();
         }
 
-        public async Task<User> GetUserInfo(string email)
+        public async Task<User> GetUserInfoByEmail(string email)
         {
             var user = await _userRepository.GetAsync(u => u.Email == email);
             if (user.Count == 0)
@@ -92,6 +92,16 @@ namespace Chathub.API.Domain.UnitOfWorks.Implementation
             return user.First();
         }
 
+        public async Task<User> GetUserInfoById(Guid userId)
+        {
+            var user = await _userRepository.GetAsync(u => u.Id == userId);
+            if (user.Count == 0)
+            {
+                throw new Exception("User not found");
+            }
+
+            return user.First();
+        }
 
         public async Task SaveChangeAsync()
         {
